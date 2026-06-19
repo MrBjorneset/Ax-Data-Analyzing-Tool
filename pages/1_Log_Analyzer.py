@@ -47,10 +47,20 @@ def main() -> None:
 
     if source is None and backup_csvs:
         st.caption("Using a log from the service backup uploaded on the Home page.")
-        names = [n for n, _ in backup_csvs]
-        pick = st.selectbox("Log from backup", ["—"] + names)
-        if pick != "—":
-            data = dict(backup_csvs)[pick]
+
+        def _fmt_size(n: int) -> str:
+            if n < 1024:
+                return f"{n} B"
+            if n < 1024 * 1024:
+                return f"{n / 1024:.1f} KB"
+            return f"{n / (1024 * 1024):.1f} MB"
+
+        # Map a display label (with size) back to the real filename
+        labels = {f"{n}  ·  {_fmt_size(len(d))}": n for n, d in backup_csvs}
+        pick_label = st.selectbox("Log from backup", ["—"] + list(labels))
+        if pick_label != "—":
+            name = labels[pick_label]
+            data = dict(backup_csvs)[name]
             source = io.BytesIO(data)
 
     if source is None:
