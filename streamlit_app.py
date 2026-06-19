@@ -26,9 +26,10 @@ st.divider()
 # =============== SERVICE BACKUP UPLOAD ===============
 st.subheader("📦 Upload a service backup")
 st.write(
-    "Drop in a whole machine backup at once — loose files or a `.zip`. "
-    "The Uberlog **CSV** goes to the Log Analyzer; the **XML** config files go "
-    "to the Settings Inventory. Each tool will offer these files automatically."
+    "Zip your machine backup folder (e.g. `storageCard2`) and upload the **`.zip`** here. "
+    "Files are picked by folder: XML from `Config` goes to the Settings Inventory, "
+    "CSVs from `Uberlogs` / `Uberlogs_slow` go to the Log Analyzer. Everything else is ignored.\n\n"
+    "*(Zip is required — selecting loose files strips their folder paths, so the folder rules can't be applied.)*"
 )
 
 backup_files = st.file_uploader(
