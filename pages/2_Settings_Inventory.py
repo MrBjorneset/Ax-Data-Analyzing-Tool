@@ -3,6 +3,7 @@
 
 import os
 import glob
+import io
 import xml.etree.ElementTree as ET
 
 import streamlit as st
@@ -12,7 +13,7 @@ from xml_logic import pair_base, build_dataframe, build_important_table
 st.set_page_config(page_title="Machine Settings Inventory", page_icon="🔧", layout="wide")
 
 
-def show_results(df, machine_name="machine"):
+def show_results(df, machine_name="machine", key_prefix="default"):
     if df.empty:
         st.warning("No paired settings found.")
         return
@@ -42,21 +43,42 @@ def show_results(df, machine_name="machine"):
         "Download important settings (CSV)",
         data=imp.to_csv(index=False).encode("utf-8"),
         file_name=f"{machine_name}_important.csv",
-        mime="text/csv", key="dl_imp",
+        mime="text/csv", key=f"dl_imp_{key_prefix}",
     )
 
     # --- Full table ---
     st.subheader("All settings")
     view = st.radio("Show", ["Only differences", "All settings (incl. defaults)"],
-                    horizontal=True)
+                    horizontal=True, key=f"view_{key_prefix}")
     shown = df if view.startswith("All") else df[df["Status"] != "unchanged"]
     st.dataframe(shown, use_container_width=True, hide_index=True)
     st.download_button(
         "Download full table (CSV)",
         data=shown.to_csv(index=False).encode("utf-8"),
         file_name=f"{machine_name}_settings.csv",
-        mime="text/csv", key="dl_full",
+        mime="text/csv", key=f"dl_full_{key_prefix}",
     )
+
+
+def pairs_from_bytes(xmls):
+    """Build (label, clean_root, rt_root) pairs from a list of (name, bytes)."""
+    groups = {}
+    for name, data in xmls:
+        base, kind = pair_base(name)
+        groups.setdefault(base, {})[kind] = data
+    pairs, unmatched = [], []
+    for base in sorted(groups):
+        g = groups[base]
+        if "base" in g and "rt" in g:
+            try:
+                pairs.append((base,
+                              ET.parse(io.BytesIO(g["base"])).getroot(),
+                              ET.parse(io.BytesIO(g["rt"])).getroot()))
+            except ET.ParseError as e:
+                st.error(f"{base}: could not parse - {e}")
+        else:
+            unmatched.append(base)
+    return pairs, unmatched
 
 
 # ----------------------------------- UI ------------------------------------
@@ -64,7 +86,28 @@ def show_results(df, machine_name="machine"):
 st.title("Machine Settings Inventory")
 st.caption("Compare one machine's clean-install config files against its real-time files.")
 
-tab_upload, tab_folder = st.tabs(["Upload backup files", "Local folder path"])
+backup_xmls = st.session_state.get("backup_xmls", [])
+
+tab_backup, tab_upload, tab_folder = st.tabs(
+    ["From service backup", "Upload backup files", "Local folder path"]
+)
+
+with tab_backup:
+    if not backup_xmls:
+        st.info("No service backup loaded. Upload one on the Home page, then return here.")
+    else:
+        st.write(f"Using **{len(backup_xmls)} XML file(s)** from the service backup "
+                 "uploaded on the Home page.")
+        machine_name_b = st.text_input("Machine name (for the export filename)",
+                                       value="machine", key="mn_backup")
+        pairs, unmatched = pairs_from_bytes(backup_xmls)
+        if unmatched:
+            st.warning("No clean/_rt partner for: " + ", ".join(unmatched))
+        if pairs:
+            show_results(build_dataframe(pairs), machine_name_b or "machine", key_prefix="backup")
+        else:
+            st.warning("No clean/_rt pairs found in the backup.")
+
 
 with tab_upload:
     st.write("Upload all the `.xml` files from **one machine's** backup "
@@ -91,7 +134,7 @@ with tab_upload:
         if unmatched:
             st.warning("No clean/_rt partner for: " + ", ".join(unmatched))
         if pairs:
-            show_results(build_dataframe(pairs), machine_name or "machine")
+            show_results(build_dataframe(pairs), machine_name or "machine", key_prefix="upload")
 
 with tab_folder:
     st.write("If you run this app locally, point it at one machine's backup folder.")
@@ -117,4 +160,4 @@ with tab_folder:
                 st.warning(f"No  X.xml / X_rt.xml  pairs found in {folder}")
             else:
                 show_results(build_dataframe(pairs),
-                             os.path.basename(os.path.abspath(folder)))
+                             os.path.basename(os.path.abspath(folder)), key_prefix="folder")

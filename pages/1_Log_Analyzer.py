@@ -2,6 +2,8 @@
 # This is the former app.py, adapted to run as a page in the multipage app.
 # All business logic still lives in logic.py / charts.py / limits.py / ui.py.
 
+import io
+
 import streamlit as st
 
 from config import APP_TITLE, APP_ICON
@@ -38,12 +40,28 @@ def main() -> None:
     render_page_header()
     controls = render_sidebar_controls()
 
-    if not controls["uploaded_file"]:
-        st.info("Upload a CSV log file from the sidebar to get started.")
+    # File source: sidebar upload, or a CSV from the service backup uploaded
+    # on the Home page (stored in session_state).
+    source = controls["uploaded_file"]
+    backup_csvs = st.session_state.get("backup_csvs", [])
+
+    if source is None and backup_csvs:
+        st.caption("Using a log from the service backup uploaded on the Home page.")
+        names = [n for n, _ in backup_csvs]
+        pick = st.selectbox("Log from backup", ["—"] + names)
+        if pick != "—":
+            data = dict(backup_csvs)[pick]
+            source = io.BytesIO(data)
+
+    if source is None:
+        st.info(
+            "Upload a CSV log from the sidebar, or upload a service backup on the "
+            "Home page and pick a log here."
+        )
         return
 
     try:
-        df, param_map, metadata = load_and_clean_csv(controls["uploaded_file"])
+        df, param_map, metadata = load_and_clean_csv(source)
     except ValueError as e:
         st.error(str(e))
         return
