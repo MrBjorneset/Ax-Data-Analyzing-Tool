@@ -35,7 +35,6 @@ with col1:
         "- Z-score anomaly detection\n"
         "- Engineering-limit checks from EPT026795"
     )
-    st.page_link("pages/1_Log_Analyzer.py", label="Open Log Analyzer", icon="📊")
 
 with col2:
     st.subheader("🔧 Settings Inventory")
@@ -46,10 +45,6 @@ with col2:
         "- Full settings inventory with changed/only-in-one highlighting\n"
         "- CSV export of both tables"
     )
-    st.page_link("pages/2_Settings_Inventory.py", label="Open Settings Inventory", icon="🔧")
 
 st.divider()
-st.caption(
-    "Use the sidebar (or the buttons above) to switch tools. "
-    "Each tool runs independently."
-)
+st.info("👈 Use the sidebar to switch between the two tools.")
