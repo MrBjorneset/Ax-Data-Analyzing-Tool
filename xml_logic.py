@@ -33,7 +33,7 @@ IMPORTANT_SETTINGS = [
     ("Internal distance interval",        "root/Encoder/InternalDistanceIntervalMM"),
 
     # --- Print trigger & product detect ---
-    ("Trigger by 1=internal 0=external",  "root/DataRouting/ConfigVector/elem#2/DataRouting:Configuration/External"),
+    ("Trigger by 0=internal 1=external",  "root/DataRouting/ConfigVector/elem#2/DataRouting:Configuration/External"),
     ("Trigger level 0=low 1=high",        "root/DataRouting/ConfigVector/elem#2/DataRouting:Configuration/ActiveLevel"),
     ("Print delay",                       "root/ProductDetect/PrintDelayGoals/elem/pair/second/simple"),
     ("Stroke pitch",                      "root/printing/PrintingConfig/strokePitch"),
