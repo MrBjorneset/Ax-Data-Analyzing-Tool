@@ -54,20 +54,37 @@ ZSCORE_STEP = 0.1
 #
 # Add or edit presets here — the Log Analyzer picks them up automatically.
 PLOT_PRESETS = {
-    "Standard (8 plots)": [
+    "Full dashboard (17 plots)": [
+        {"title": "Ink Pressure Pump (mBar / RPM)", "vars": ["ink system pressure", "speedrpm"]},
+        {"title": "Gutter Pump Speed (RPM)",         "vars": ["gutter pump speed"]},
+        {"title": "Printhead Temperature (°C)",      "vars": ["target temp", "actual temp"]},
+        {"title": "Jet Hours (Seconds)",             "vars": ["jet hours"]},
+        {"title": "CPU1 Printing / CPU2 UI (%)",     "vars": ["cpu1 load", "cpu2 load"]},
+        {"title": "Viscosity (cP)",                  "vars": ["actual cp", "target cp"]},
+        {"title": "Gutter Vacuum (- mBar)",          "vars": ["gutter vacuum"]},
+        {"title": "Modulation Voltage (V)",          "vars": ["modulation voltage"]},
+        {"title": "Products Coded",                  "vars": ["products coded"]},
+        {"title": "Free Memory (kB)",                "vars": ["free memory"]},
+        {"title": "Ink Temperature (°C)",            "vars": ["ink temperature"]},
+        {"title": "Phase Position 0",                "vars": ["phase position"]},
+        {"title": "Line Speed (mm/s)",               "vars": ["line speed"]},
+        {"title": "Main PCB Zinc Temperature (°C)",  "vars": ["zinc temperature"]},
+        {"title": "ITM Ink & MUM Makeup Levels (%)", "vars": ["itm level", "mum level"]},
+        {"title": "Charge Electrode Offset",         "vars": ["charge electrode offset"]},
+        {"title": "Jet ON = 1 & Jet OFF = 0",        "vars": ["jet on", "jet running"]},
+    ],
+    "Key parameters (6 plots)": [
         {"title": "Ink system pressure",     "vars": ["ink system pressure", "pressure set point"]},
         {"title": "Viscosity",               "vars": ["actual cp", "target cp"]},
         {"title": "Ink temperature",         "vars": ["ink temperature"]},
         {"title": "Gutter vacuum",           "vars": ["gutter vacuum"]},
-        {"title": "Feed pump current",       "vars": ["feed pump current"]},
         {"title": "EHT %",                   "vars": ["eht %"]},
         {"title": "Charge electrode offset", "vars": ["charge electrode offset"]},
-        {"title": "System fan speed",        "vars": ["system fan speed"]},
     ],
 }
 
 # Which preset is selected when a log first loads.
-DEFAULT_PRESET = "Standard (8 plots)"
+DEFAULT_PRESET = "Full dashboard (17 plots)"
 
 # =============== UI ===============
 APP_TITLE = "Domino CIJ Ax Uberlog Analyzer"

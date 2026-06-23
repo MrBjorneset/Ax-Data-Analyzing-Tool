@@ -63,8 +63,8 @@ def _resolve_source(controls):
 
 
 def _render_preset_section(df_filtered, controls, x_values):
-    """Preset plots shown at the top, each toggleable."""
-    preset_name = render_preset_controls(list(PLOT_PRESETS), DEFAULT_PRESET)
+    """Preset plots shown at the top, each toggleable, laid out in a grid."""
+    preset_name, ncols = render_preset_controls(list(PLOT_PRESETS), DEFAULT_PRESET)
 
     preset_plots = [
         {"title": spec["title"], "cols": resolve_columns(df_filtered, spec["vars"])}
@@ -82,20 +82,23 @@ def _render_preset_section(df_filtered, controls, x_values):
         )
 
     st.divider()
-    any_shown = False
-    for i, p in enumerate(preset_plots):
-        if not enabled.get(i) or not p["cols"]:
-            continue
-        any_shown = True
-        st.markdown(f"**{p['title']}**")
-        fig = build_plot(
-            df_filtered, p["cols"], controls["plot_type"],
-            controls["show_grid"], preset_mask, x_values,
-        )
-        st.plotly_chart(fig, use_container_width=True)
 
-    if not any_shown:
+    to_show = [p for i, p in enumerate(preset_plots) if enabled.get(i) and p["cols"]]
+    if not to_show:
         st.info("No preset plots selected (or none of their parameters are in this log).")
+        return
+
+    height = 300 if ncols > 1 else 460
+    grid = st.columns(ncols)
+    for slot, p in enumerate(to_show):
+        with grid[slot % ncols]:
+            st.markdown(f"**{p['title']}**")
+            fig = build_plot(
+                df_filtered, p["cols"], controls["plot_type"],
+                controls["show_grid"], preset_mask, x_values,
+            )
+            fig.update_layout(height=height, showlegend=len(p["cols"]) > 1)
+            st.plotly_chart(fig, use_container_width=True)
 
 
 def _render_custom_section(df_filtered, param_map, controls, x_values, selected_states):

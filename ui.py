@@ -209,11 +209,16 @@ def render_parameter_selector(
     return selected_columns
 
 
-def render_preset_controls(preset_names: list[str], default: str) -> str:
-    """Render the preset chooser. Returns the selected preset name."""
+def render_preset_controls(preset_names: list[str], default: str) -> tuple[str, int]:
+    """Render the preset chooser and layout selector. Returns (preset_name, ncols)."""
     st.subheader("📈 Preset plots")
-    idx = preset_names.index(default) if default in preset_names else 0
-    return st.selectbox("Preset", preset_names, index=idx, key="preset_choice")
+    c1, c2 = st.columns([3, 1])
+    with c1:
+        idx = preset_names.index(default) if default in preset_names else 0
+        preset = st.selectbox("Preset", preset_names, index=idx, key="preset_choice")
+    with c2:
+        ncols = st.selectbox("Columns", [1, 2, 3], index=1, key="preset_cols")
+    return preset, ncols
 
 
 def render_preset_toggles(plots: list[dict]) -> dict[int, bool]:
