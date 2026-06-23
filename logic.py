@@ -198,6 +198,19 @@ def filter_by_states(
 
 # =============== STATISTICS ===============
 
+def resolve_columns(df: pd.DataFrame, substrings: list[str]) -> list[str]:
+    """
+    Resolve a list of name substrings to actual column names in df.
+    Matching is case-insensitive; order follows the substrings list, and
+    duplicates are removed. Substrings matching nothing are simply skipped.
+    """
+    cols: list[str] = []
+    for sub in substrings:
+        for c in df.columns:
+            if sub.lower() in c.lower() and c not in cols:
+                cols.append(c)
+    return cols
+
 def compute_stats(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame | None:
     """
     Return min / max / mean / std for each selected numeric column.

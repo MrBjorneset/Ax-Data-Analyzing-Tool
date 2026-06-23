@@ -184,27 +184,59 @@ def render_parameter_selector(
     df_filtered: pd.DataFrame,
 ) -> list[str]:
     """
-    Render grouped parameter multiselects and a data preview.
+    Compact parameter picker: a single searchable multiselect over all columns
+    (their names already include the group, e.g. "Peltier - Ink temperature").
     Returns the list of selected column names.
     """
-    st.subheader("🔧 Parameters")
-    selected_columns = []
-    col_left, col_right = st.columns([3, 2])
+    all_cols: list[str] = []
+    for subs in param_map.values():
+        for c in subs.values():
+            if c not in all_cols:
+                all_cols.append(c)
 
-    with col_left:
-        for main, subs in param_map.items():
-            selected_columns += st.multiselect(
-                label=main,
-                options=list(subs.values()),
-                key=main,
-            )
+    selected_columns = st.multiselect(
+        "Parameters to plot",
+        options=all_cols,
+        key="manual_params",
+        help="Type to search. Names include their group prefix.",
+    )
 
-    with col_right:
-        st.markdown("### Preview")
-        preview = df_filtered[selected_columns] if selected_columns else df_filtered
-        st.dataframe(preview.head(10), width="stretch", height=260)
+    if selected_columns:
+        with st.expander("Preview selected data"):
+            st.dataframe(df_filtered[selected_columns].head(10),
+                         use_container_width=True, height=240)
 
     return selected_columns
+
+
+def render_preset_controls(preset_names: list[str], default: str) -> str:
+    """Render the preset chooser. Returns the selected preset name."""
+    st.subheader("📈 Preset plots")
+    idx = preset_names.index(default) if default in preset_names else 0
+    return st.selectbox("Preset", preset_names, index=idx, key="preset_choice")
+
+
+def render_preset_toggles(plots: list[dict]) -> dict[int, bool]:
+    """
+    Render a row of checkboxes — one per preset plot. Plots with no matching
+    columns in the current log are shown disabled.
+
+    plots : list of {"title": str, "cols": list[str]}
+    Returns {plot_index: enabled_bool}.
+    """
+    enabled: dict[int, bool] = {}
+    columns = st.columns(4)
+    for i, p in enumerate(plots):
+        has_data = bool(p["cols"])
+        with columns[i % 4]:
+            enabled[i] = st.checkbox(
+                p["title"],
+                value=has_data,
+                disabled=not has_data,
+                key=f"preset_toggle_{i}",
+                help=None if has_data else "No matching parameter in this log",
+            )
+    return enabled
 
 
 def render_anomaly_banner(n_flagged: int, selected_states: list[str]) -> None:
