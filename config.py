@@ -86,6 +86,10 @@ PLOT_PRESETS = {
 # Which preset is selected when a log first loads.
 DEFAULT_PRESET = "Full dashboard (17 plots)"
 
+# Max points drawn per trace when "Speed up plots" is on. Larger logs are
+# uniformly downsampled to roughly this many points (visual trend is unchanged).
+MAX_PLOT_POINTS = 4000
+
 # =============== UI ===============
 APP_TITLE = "Domino CIJ Ax Uberlog Analyzer"
 APP_SUBTITLE = "Interactive log inspection & visualization"

@@ -55,6 +55,12 @@ def render_sidebar_controls() -> dict:
     multi_plot = st.sidebar.checkbox("Separate plots per parameter", value=False)
     show_grid  = st.sidebar.checkbox("Show grid", value=True)
     show_stats = st.sidebar.checkbox("Show stats summary", value=True)
+    downsample = st.sidebar.checkbox(
+        "Speed up plots (downsample large logs)",
+        value=True,
+        help="Draw fewer points for faster rendering. The trend looks the same; "
+             "turn off for exact point-by-point detail.",
+    )
 
     return dict(
         uploaded_file=uploaded_file,
@@ -63,6 +69,7 @@ def render_sidebar_controls() -> dict:
         multi_plot=multi_plot,
         show_grid=show_grid,
         show_stats=show_stats,
+        downsample=downsample,
     )
 
 

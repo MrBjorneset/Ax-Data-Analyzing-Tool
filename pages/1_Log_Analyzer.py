@@ -6,7 +6,7 @@ import io
 
 import streamlit as st
 
-from config import APP_TITLE, APP_ICON, PLOT_PRESETS, DEFAULT_PRESET
+from config import APP_TITLE, APP_ICON, PLOT_PRESETS, DEFAULT_PRESET, MAX_PLOT_POINTS
 from logic import (
     load_and_clean_csv,
     find_timestamp_column,
@@ -29,6 +29,13 @@ from ui import (
 st.set_page_config(page_title=APP_TITLE, page_icon=APP_ICON, layout="wide")
 
 
+@st.cache_data(show_spinner="Parsing log…")
+def _parse_log(data: bytes):
+    """Cached CSV parse — keyed on the file's raw bytes, so a given log is
+    parsed only once no matter how many times the page reruns."""
+    return load_and_clean_csv(io.BytesIO(data))
+
+
 def _fmt_size(n: int) -> str:
     if n < 1024:
         return f"{n} B"
@@ -37,20 +44,21 @@ def _fmt_size(n: int) -> str:
     return f"{n / (1024 * 1024):.1f} MB"
 
 
-def _resolve_source(controls):
-    """Return a file-like CSV source: sidebar upload, or a backup log."""
-    source = controls["uploaded_file"]
-    backup_csvs = st.session_state.get("backup_csvs", [])
+def _resolve_source(controls) -> bytes | None:
+    """Return the raw CSV bytes from the sidebar upload, or a backup log."""
+    uploaded = controls["uploaded_file"]
+    if uploaded is not None:
+        return uploaded.getvalue()
 
-    if source is None and backup_csvs:
+    backup_csvs = st.session_state.get("backup_csvs", [])
+    if backup_csvs:
         st.caption("Using a log from the service backup uploaded on the Home page.")
         labels = {f"{n}  ·  {_fmt_size(len(d))}": n for n, d in backup_csvs}
         pick_label = st.selectbox("Log from backup", ["—"] + list(labels))
         if pick_label != "—":
-            name = labels[pick_label]
-            source = io.BytesIO(dict(backup_csvs)[name])
+            return dict(backup_csvs)[labels[pick_label]]
 
-    return source
+    return None
 
 
 def _render_preset_section(df, controls, x_values):
@@ -72,12 +80,13 @@ def _render_preset_section(df, controls, x_values):
         return
 
     height = 300 if ncols > 1 else 460
+    max_points = MAX_PLOT_POINTS if controls["downsample"] else None
     grid = st.columns(ncols)
     for slot, p in enumerate(to_show):
         with grid[slot % ncols]:
             st.markdown(f"**{p['title']}**")
             fig = build_plot(df, p["cols"], controls["plot_type"],
-                             controls["show_grid"], None, x_values)
+                             controls["show_grid"], None, x_values, max_points)
             fig.update_layout(height=height, showlegend=len(p["cols"]) > 1)
             st.plotly_chart(fig, use_container_width=True)
 
@@ -93,14 +102,15 @@ def _render_custom_section(df, param_map, controls, x_values):
             st.warning("Please select at least one parameter.")
             return
 
+        max_points = MAX_PLOT_POINTS if controls["downsample"] else None
         if controls["multi_plot"]:
             for col in selected_columns:
                 fig = build_plot(df, [col], controls["plot_type"],
-                                 controls["show_grid"], None, x_values)
+                                 controls["show_grid"], None, x_values, max_points)
                 st.plotly_chart(fig, use_container_width=True)
         else:
             fig = build_plot(df, selected_columns, controls["plot_type"],
-                             controls["show_grid"], None, x_values)
+                             controls["show_grid"], None, x_values, max_points)
             st.plotly_chart(fig, use_container_width=True)
 
         if controls["show_stats"]:
@@ -111,8 +121,8 @@ def main() -> None:
     render_page_header()
     controls = render_sidebar_controls()
 
-    source = _resolve_source(controls)
-    if source is None:
+    data = _resolve_source(controls)
+    if data is None:
         st.info(
             "Upload a CSV log from the sidebar, or upload a service backup on the "
             "Home page and pick a log here."
@@ -120,7 +130,7 @@ def main() -> None:
         return
 
     try:
-        df, param_map, metadata = load_and_clean_csv(source)
+        df, param_map, metadata = _parse_log(data)
     except ValueError as e:
         st.error(str(e))
         return
