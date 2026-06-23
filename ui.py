@@ -55,12 +55,6 @@ def render_sidebar_controls() -> dict:
     multi_plot = st.sidebar.checkbox("Separate plots per parameter", value=False)
     show_grid  = st.sidebar.checkbox("Show grid", value=True)
     show_stats = st.sidebar.checkbox("Show stats summary", value=True)
-    downsample = st.sidebar.checkbox(
-        "Speed up plots (downsample large logs)",
-        value=True,
-        help="Draw fewer points for faster rendering. The trend looks the same; "
-             "turn off for exact point-by-point detail.",
-    )
 
     return dict(
         uploaded_file=uploaded_file,
@@ -69,7 +63,6 @@ def render_sidebar_controls() -> dict:
         multi_plot=multi_plot,
         show_grid=show_grid,
         show_stats=show_stats,
-        downsample=downsample,
     )
 
 
@@ -159,19 +152,22 @@ def render_preset_controls(preset_names: list[str], default: str) -> tuple[str, 
 def render_preset_toggles(plots: list[dict]) -> dict[int, bool]:
     """
     Render a row of checkboxes — one per preset plot. Plots with no matching
-    columns in the current log are shown disabled.
+    columns in the current log are shown disabled. If any plot is flagged
+    "default": True, only those start ticked; otherwise all start ticked.
 
-    plots : list of {"title": str, "cols": list[str]}
+    plots : list of {"title": str, "cols": list[str], "default"?: bool}
     Returns {plot_index: enabled_bool}.
     """
+    has_any_default = any(p.get("default") for p in plots)
     enabled: dict[int, bool] = {}
     columns = st.columns(4)
     for i, p in enumerate(plots):
         has_data = bool(p["cols"])
+        default_on = p.get("default", False) if has_any_default else True
         with columns[i % 4]:
             enabled[i] = st.checkbox(
                 p["title"],
-                value=has_data,
+                value=has_data and default_on,
                 disabled=not has_data,
                 key=f"preset_toggle_{i}",
                 help=None if has_data else "No matching parameter in this log",

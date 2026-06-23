@@ -55,14 +55,14 @@ ZSCORE_STEP = 0.1
 # Add or edit presets here — the Log Analyzer picks them up automatically.
 PLOT_PRESETS = {
     "Full dashboard (17 plots)": [
-        {"title": "Ink Pressure Pump (mBar / RPM)", "vars": ["ink system pressure (", "speedfp"]},
+        {"title": "Ink Pressure Pump (mBar / RPM)", "vars": ["ink system pressure (", "speedfp"], "default": True},
         {"title": "Gutter Pump Speed (RPM)",         "vars": ["speedgp"]},
         {"title": "Printhead Temperature (°C)",      "vars": ["target temp 0", "actual temp 0"]},
         {"title": "Jet Hours (Seconds)",             "vars": ["jetting hours"]},
         {"title": "CPU1 Printing / CPU2 UI (%)",     "vars": ["cpu1 load", "cpu2 load"]},
-        {"title": "Viscosity (cP)",                  "vars": ["target cp @ 25", "actual cp @ 25"]},
-        {"title": "Gutter Vacuum (- mBar)",          "vars": ["gutter vacuum ("]},
-        {"title": "Modulation Voltage (V)",          "vars": ["mod voltage 0"]},
+        {"title": "Viscosity (cP)",                  "vars": ["target cp @ 25", "actual cp @ 25"], "default": True},
+        {"title": "Gutter Vacuum (- mBar)",          "vars": ["gutter vacuum ("], "default": True},
+        {"title": "Modulation Voltage (V)",          "vars": ["mod voltage 0"], "default": True},
         {"title": "Products Coded",                  "vars": ["num prints"]},
         {"title": "Free Memory (kB)",                "vars": ["free memory"]},
         {"title": "Ink Temperature (°C)",            "vars": ["ink temperature ("]},
@@ -85,10 +85,6 @@ PLOT_PRESETS = {
 
 # Which preset is selected when a log first loads.
 DEFAULT_PRESET = "Full dashboard (17 plots)"
-
-# Max points drawn per trace when "Speed up plots" is on. Larger logs are
-# uniformly downsampled to roughly this many points (visual trend is unchanged).
-MAX_PLOT_POINTS = 4000
 
 # =============== UI ===============
 APP_TITLE = "Domino CIJ Ax Uberlog Analyzer"

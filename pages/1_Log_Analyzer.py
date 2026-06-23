@@ -6,7 +6,7 @@ import io
 
 import streamlit as st
 
-from config import APP_TITLE, APP_ICON, PLOT_PRESETS, DEFAULT_PRESET, MAX_PLOT_POINTS
+from config import APP_TITLE, APP_ICON, PLOT_PRESETS, DEFAULT_PRESET
 from logic import (
     load_and_clean_csv,
     find_timestamp_column,
@@ -66,7 +66,9 @@ def _render_preset_section(df, controls, x_values):
     preset_name, ncols = render_preset_controls(list(PLOT_PRESETS), DEFAULT_PRESET)
 
     preset_plots = [
-        {"title": spec["title"], "cols": resolve_columns(df, spec["vars"])}
+        {"title": spec["title"],
+         "cols": resolve_columns(df, spec["vars"]),
+         "default": spec.get("default", False)}
         for spec in PLOT_PRESETS[preset_name]
     ]
 
@@ -80,13 +82,12 @@ def _render_preset_section(df, controls, x_values):
         return
 
     height = 300 if ncols > 1 else 460
-    max_points = MAX_PLOT_POINTS if controls["downsample"] else None
     grid = st.columns(ncols)
     for slot, p in enumerate(to_show):
         with grid[slot % ncols]:
             st.markdown(f"**{p['title']}**")
             fig = build_plot(df, p["cols"], controls["plot_type"],
-                             controls["show_grid"], None, x_values, max_points)
+                             controls["show_grid"], None, x_values)
             fig.update_layout(height=height, showlegend=len(p["cols"]) > 1)
             st.plotly_chart(fig, use_container_width=True)
 
@@ -102,15 +103,14 @@ def _render_custom_section(df, param_map, controls, x_values):
             st.warning("Please select at least one parameter.")
             return
 
-        max_points = MAX_PLOT_POINTS if controls["downsample"] else None
         if controls["multi_plot"]:
             for col in selected_columns:
                 fig = build_plot(df, [col], controls["plot_type"],
-                                 controls["show_grid"], None, x_values, max_points)
+                                 controls["show_grid"], None, x_values)
                 st.plotly_chart(fig, use_container_width=True)
         else:
             fig = build_plot(df, selected_columns, controls["plot_type"],
-                             controls["show_grid"], None, x_values, max_points)
+                             controls["show_grid"], None, x_values)
             st.plotly_chart(fig, use_container_width=True)
 
         if controls["show_stats"]:

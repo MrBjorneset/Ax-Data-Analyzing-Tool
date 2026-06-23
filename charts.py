@@ -12,7 +12,6 @@ def build_plot(
     show_grid: bool,
     anomaly_mask: pd.DataFrame | None = None,
     x_values: pd.Series | None = None,
-    max_points: int | None = None,
 ) -> go.Figure:
     """
     Build a Plotly figure for the selected columns and plot type.
@@ -20,20 +19,9 @@ def build_plot(
     x_values : optional Series to use as the X-axis (e.g. parsed timestamps).
                If None, row index is used. Timestamps produce a time-axis with
                human-readable hover labels. Not applied to Histograms (value axis).
-
-    max_points : if set and the data is larger, uniformly downsample to roughly
-                 this many points for faster rendering (not applied to Histograms,
-                 which need every value for an accurate distribution).
     """
     fig = go.Figure()
     x = x_values if (x_values is not None and plot_type != "Histogram") else None
-
-    # Uniform downsample for speed (keeps the trend; skips histograms)
-    if max_points and plot_type != "Histogram" and len(df) > max_points:
-        step = len(df) // max_points + 1
-        df = df.iloc[::step]
-        if x is not None:
-            x = x.iloc[::step]
 
     for col in columns:
         _add_data_trace(fig, df, col, plot_type, x)
