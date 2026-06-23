@@ -3,15 +3,7 @@
 
 import streamlit as st
 import pandas as pd
-from config import (
-    APP_TITLE,
-    APP_SUBTITLE,
-    STEADY_STATE,
-    ZSCORE_DEFAULT_THRESHOLD,
-    ZSCORE_MIN,
-    ZSCORE_MAX,
-    ZSCORE_STEP,
-)
+from config import APP_TITLE, APP_SUBTITLE
 
 
 # =============== PAGE SETUP ===============
@@ -64,27 +56,6 @@ def render_sidebar_controls() -> dict:
     show_grid  = st.sidebar.checkbox("Show grid", value=True)
     show_stats = st.sidebar.checkbox("Show stats summary", value=True)
 
-    st.sidebar.divider()
-    st.sidebar.subheader("🔍 Anomaly Detection")
-    enable_anomaly    = st.sidebar.checkbox("Enable Z-score anomaly detection", value=True)
-    zscore_threshold  = st.sidebar.slider(
-        "Z-score threshold",
-        min_value=ZSCORE_MIN,
-        max_value=ZSCORE_MAX,
-        value=ZSCORE_DEFAULT_THRESHOLD,
-        step=ZSCORE_STEP,
-        help="Flag points this many standard deviations from the mean. Lower = more sensitive.",
-    )
-
-    st.sidebar.divider()
-    st.sidebar.subheader("📏 Engineering Limits")
-    enable_limits = st.sidebar.checkbox(
-        "Check engineering limits",
-        value=True,
-        help="Flag readings outside known safe operating ranges from the Domino Ax "
-             "Engineer's Reference Guide (EPT026795 Issue 32).",
-    )
-
     return dict(
         uploaded_file=uploaded_file,
         plot_type=plot_type,
@@ -92,29 +63,6 @@ def render_sidebar_controls() -> dict:
         multi_plot=multi_plot,
         show_grid=show_grid,
         show_stats=show_stats,
-        enable_anomaly=enable_anomaly,
-        zscore_threshold=zscore_threshold,
-        enable_limits=enable_limits,
-    )
-
-
-def render_state_filter_sidebar(available_states: list[str]) -> list[str]:
-    """
-    Render the state filter section in the sidebar (shown only when a log is loaded).
-    Returns the list of selected states.
-    """
-    st.sidebar.divider()
-    st.sidebar.subheader("⚙️ State Filter")
-    st.sidebar.caption(
-        "Select which printer states to include. "
-        "Deselect startup/shutdown states to avoid false anomaly alerts."
-    )
-    default = [STEADY_STATE] if STEADY_STATE in available_states else available_states
-    return st.sidebar.multiselect(
-        "Include states",
-        options=available_states,
-        default=default,
-        help="READY_TO_PRINT = steady-state. SEQUENCING_ON/OFF and STANDBY are transient phases.",
     )
 
 
@@ -157,26 +105,6 @@ def render_metadata_panel(metadata: dict, date_range: dict | None = None) -> Non
                 cols[i % 2].markdown(f"**{k}**  \n{v}")
         else:
             st.info("No metadata found in log.")
-
-
-def render_state_filter_banner(
-    total_rows: int,
-    filtered_rows: int,
-    selected_states: list[str],
-    excluded_states: list[str],
-) -> None:
-    excluded = total_rows - filtered_rows
-    if excluded > 0:
-        banner_info(
-            f"<strong>State filter active</strong> — "
-            f"Analysing <strong>{filtered_rows:,} rows</strong> {selected_states}. "
-            f"Excluded <strong>{excluded:,} rows</strong> from: {excluded_states}."
-        )
-    elif selected_states:
-        banner_info(
-            f"<strong>State filter active</strong> — "
-            f"All {total_rows:,} rows match selected states."
-        )
 
 
 def render_parameter_selector(
@@ -244,21 +172,6 @@ def render_preset_toggles(plots: list[dict]) -> dict[int, bool]:
     return enabled
 
 
-def render_anomaly_banner(n_flagged: int, selected_states: list[str]) -> None:
-    states_label = ", ".join(selected_states) if selected_states else "all states"
-    if n_flagged > 0:
-        banner_warning(
-            f"<strong>Potential fault detected</strong> — "
-            f"{n_flagged} parameter(s) have anomalous readings during {states_label}. "
-            f"See the anomaly report below."
-        )
-    else:
-        banner_ok(
-            "<strong>All parameters look normal</strong> — "
-            "No anomalies detected at the current threshold."
-        )
-
-
 def render_stats_panel(stats_df: pd.DataFrame | None) -> None:
     st.divider()
     st.subheader("📊 Stats Summary")
@@ -266,50 +179,3 @@ def render_stats_panel(stats_df: pd.DataFrame | None) -> None:
         st.dataframe(stats_df, use_container_width=True)
     else:
         st.info("No numeric columns selected — stats not available.")
-
-
-def render_anomaly_report(
-    anomaly_summary: pd.DataFrame,
-    anomaly_mask: pd.DataFrame,
-    df_filtered: pd.DataFrame,
-    selected_columns: list[str],
-    zscore_threshold: float,
-    selected_states: list[str],
-) -> None:
-    st.divider()
-    st.subheader("🚨 Anomaly Report")
-    st.caption(
-        f"Z-score threshold: ±{zscore_threshold} | "
-        f"States analysed: {', '.join(selected_states) if selected_states else 'all'}"
-    )
-    st.dataframe(anomaly_summary, use_container_width=True)
-
-    any_flagged = anomaly_mask.any(axis=1)
-    n_rows = int(any_flagged.sum())
-    if n_rows > 0:
-        with st.expander(f"🔎 View {n_rows} flagged row(s)"):
-            st.dataframe(
-                df_filtered[any_flagged][selected_columns],
-                use_container_width=True,
-            )
-
-
-def render_limits_report(limits_df: pd.DataFrame) -> None:
-    """Render the engineering limits check results."""
-    st.divider()
-    st.subheader("📏 Engineering Limits Check")
-
-    n_violations = int((limits_df["Total violations"] > 0).sum())
-    if n_violations > 0:
-        banner_warning(
-            f"<strong>{n_violations} parameter(s) exceeded engineering limits</strong> — "
-            f"See table below for details."
-        )
-    else:
-        banner_ok(
-            "<strong>All parameters within engineering limits</strong> — "
-            "No out-of-spec readings detected."
-        )
-
-    # Show full table but highlight the Note column lightly
-    st.dataframe(limits_df, use_container_width=True)
