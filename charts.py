@@ -84,9 +84,16 @@ def _apply_layout(fig: go.Figure, show_grid: bool, x_is_time: bool) -> None:
 
     fig.update_layout(
         height=500,
-        legend_title_text="Parameters",
         hovermode="x unified",
         margin=dict(l=40, r=20, t=40, b=40),
+        legend=dict(
+            orientation="h",       # horizontal row of entries
+            yanchor="top",
+            y=-0.15,               # sit just below the plot area
+            xanchor="left",
+            x=0,
+            title_text="",
+        ),
     )
     fig.update_xaxes(**xaxis_cfg)
     fig.update_yaxes(showgrid=show_grid)
