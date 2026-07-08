@@ -9,7 +9,7 @@ import streamlit as st
 from config import APP_TITLE, APP_ICON, PLOT_PRESETS, DEFAULT_PRESET
 from logic import (
     load_and_clean_csv,
-    find_state_columns,
+    get_state_column,
     get_available_states,
     filter_by_states,
     find_timestamp_column,
@@ -23,7 +23,6 @@ from ui import (
     render_page_header,
     render_sidebar_controls,
     render_metadata_panel,
-    render_state_column_picker,
     render_state_selector,
     render_parameter_selector,
     render_preset_controls,
@@ -148,9 +147,8 @@ def main() -> None:
     st.divider()
 
     # --- State filter (applies to every plot on the page) ---
-    state_candidates = find_state_columns(df)
-    if state_candidates:
-        state_col = render_state_column_picker(state_candidates)
+    state_col = get_state_column(df)
+    if state_col:
         available_states = get_available_states(df, state_col)
         selected_states = render_state_selector(available_states, key_suffix=state_col)
         df_plot = filter_by_states(df, state_col, selected_states)

@@ -135,6 +135,19 @@ def find_state_columns(df: pd.DataFrame) -> list[str]:
     return [c for c in df.columns if any(k in c.lower() for k in keys)]
 
 
+def get_state_column(df: pd.DataFrame) -> str | None:
+    """
+    Return the column to use for state filtering. Prefers the detailed
+    'internal states' column (which includes phases like SEQUENCING_ON);
+    falls back to 'system status' if that's all the log has.
+    """
+    for key in ("internal state", "system status"):
+        for col in df.columns:
+            if key in col.lower():
+                return col
+    return None
+
+
 def find_timestamp_column(df: pd.DataFrame) -> str | None:
     """Return the name of the timestamp column, or None if not found."""
     for col in df.columns:
