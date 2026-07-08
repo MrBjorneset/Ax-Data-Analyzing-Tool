@@ -137,6 +137,23 @@ def render_parameter_selector(
     return selected_columns
 
 
+def render_state_selector(available_states: list[str]) -> list[str]:
+    """
+    Multiselect for which printer states to include in the plots.
+    All states are selected by default. An empty selection means "all".
+    Returns the list of selected states.
+    """
+    st.subheader("⚙️ States")
+    return st.multiselect(
+        "Printer states to plot",
+        options=available_states,
+        default=available_states,
+        key="state_filter",
+        help="All states are included by default. Deselect to focus on specific "
+             "phases, e.g. only READY_TO_PRINT.",
+    )
+
+
 def render_preset_controls(preset_names: list[str], default: str) -> tuple[str, int]:
     """Render the preset chooser and layout selector. Returns (preset_name, ncols)."""
     st.subheader("📈 Preset plots")

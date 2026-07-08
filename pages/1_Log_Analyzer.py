@@ -9,6 +9,9 @@ import streamlit as st
 from config import APP_TITLE, APP_ICON, PLOT_PRESETS, DEFAULT_PRESET
 from logic import (
     load_and_clean_csv,
+    find_status_column,
+    get_available_states,
+    filter_by_states,
     find_timestamp_column,
     parse_timestamps,
     get_log_date_range,
@@ -20,6 +23,7 @@ from ui import (
     render_page_header,
     render_sidebar_controls,
     render_metadata_panel,
+    render_state_selector,
     render_parameter_selector,
     render_preset_controls,
     render_preset_toggles,
@@ -135,20 +139,41 @@ def main() -> None:
         st.error(str(e))
         return
 
-    # X-axis: timestamp or row index. All rows/states are kept.
-    timestamp_col = find_timestamp_column(df)
-    x_values = (
-        parse_timestamps(df, timestamp_col)
-        if timestamp_col and controls["x_axis"] == "Timestamp" else None
-    )
-    date_range = get_log_date_range(df, timestamp_col) if timestamp_col else None
+    # Date range comes from the full log, before any state filtering.
+    timestamp_col_full = find_timestamp_column(df)
+    date_range = get_log_date_range(df, timestamp_col_full) if timestamp_col_full else None
 
     render_metadata_panel(metadata, date_range)
     st.divider()
 
-    _render_preset_section(df, controls, x_values)
+    # --- State filter (applies to every plot on the page) ---
+    status_col = find_status_column(df)
+    if status_col:
+        available_states = get_available_states(df, status_col)
+        selected_states = render_state_selector(available_states)
+        df_plot = filter_by_states(df, status_col, selected_states)
+        if not selected_states or len(selected_states) == len(available_states):
+            st.caption(f"Plotting all {len(df_plot):,} rows (all states).")
+        else:
+            st.caption(
+                f"Plotting {len(df_plot):,} of {len(df):,} rows "
+                f"({', '.join(selected_states)})."
+            )
+    else:
+        df_plot = df
+
+    # X-axis: timestamp or row index (built from the filtered data so it stays aligned).
+    timestamp_col = find_timestamp_column(df_plot)
+    x_values = (
+        parse_timestamps(df_plot, timestamp_col)
+        if timestamp_col and controls["x_axis"] == "Timestamp" else None
+    )
+
     st.divider()
-    _render_custom_section(df, param_map, controls, x_values)
+
+    _render_preset_section(df_plot, controls, x_values)
+    st.divider()
+    _render_custom_section(df_plot, param_map, controls, x_values)
 
 
 main()
