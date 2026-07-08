@@ -112,8 +112,27 @@ def load_and_clean_csv(uploaded_file) -> tuple[pd.DataFrame, dict, dict]:
     df = df.iloc[:, :len(h1)]
     df.columns = _build_column_names(h1, h2, h3)
 
+    _normalize_units(df)
+
     param_map = _build_param_map(h1, h2, df.columns.tolist())
     return df, param_map, metadata
+
+
+def _normalize_units(df: pd.DataFrame) -> None:
+    """
+    Convert temperature columns logged in millidegrees (e.g. 19000 = 19.0 °C)
+    to °C, in place. A column is only scaled when its values actually look like
+    millidegrees (median magnitude above ~300), so columns already stored in °C
+    (e.g. some PCB temperatures) are left untouched.
+    """
+    for col in df.columns:
+        name = col.lower()
+        if "temp" not in name:                     # temp / temperature columns only
+            continue
+        series = pd.to_numeric(df[col], errors="coerce")
+        median_mag = series.abs().median()
+        if pd.notna(median_mag) and median_mag > 300:
+            df[col] = series / 1000.0
 
 
 # =============== STATE FILTERING ===============
