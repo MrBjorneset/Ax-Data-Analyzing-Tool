@@ -137,11 +137,10 @@ def find_state_columns(df: pd.DataFrame) -> list[str]:
 
 def get_state_column(df: pd.DataFrame) -> str | None:
     """
-    Return the column to use for state filtering. Prefers the detailed
-    'internal states' column (which includes phases like SEQUENCING_ON);
-    falls back to 'system status' if that's all the log has.
+    Return the column to use for state filtering. Prefers 'system status';
+    falls back to 'internal states' only if the log lacks it.
     """
-    for key in ("internal state", "system status"):
+    for key in ("system status", "internal state"):
         for col in df.columns:
             if key in col.lower():
                 return col
