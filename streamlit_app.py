@@ -89,10 +89,9 @@ with col1:
     st.subheader("📊 Log Analyzer")
     st.markdown(
         "Upload a Domino Ax **Uberlog CSV** to inspect parameters over time:\n\n"
-        "- Grouped parameter selection and interactive plots\n"
-        "- State filtering (e.g. analyse only `READY_TO_PRINT`)\n"
-        "- Z-score anomaly detection\n"
-        "- Engineering-limit checks from EPT026795"
+        "- Preset dashboard plots, each toggleable on/off\n"
+        "- Custom plots from any parameters in the log\n"
+        "- Stats summary (min / max / mean / std)"
     )
 
 with col2:

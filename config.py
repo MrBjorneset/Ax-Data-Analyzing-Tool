@@ -31,7 +31,7 @@ PRINTER_STATES = [
     "SEQUENCING_OFF",
 ]
 
-# The state considered "steady-state" — default for anomaly analysis.
+# The state considered "steady-state".
 STEADY_STATE = "READY_TO_PRINT"
 
 # Substring matched (case-insensitive) to find the status column in the DataFrame.
@@ -39,12 +39,6 @@ STATUS_COLUMN_KEYWORD = "system status"
 
 # Substring matched (case-insensitive) to find the timestamp column.
 TIMESTAMP_COLUMN_KEYWORD = "timestamp"
-
-# =============== ANOMALY DETECTION DEFAULTS ===============
-ZSCORE_DEFAULT_THRESHOLD = 3.0
-ZSCORE_MIN = 1.0
-ZSCORE_MAX = 6.0
-ZSCORE_STEP = 0.1
 
 # =============== PLOT PRESETS ===============
 # A preset is a named list of plots. Each plot has a title and a list of

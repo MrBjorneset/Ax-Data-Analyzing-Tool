@@ -1,9 +1,7 @@
-# logic.py — data loading, cleaning, filtering, stats, anomaly detection.
+# logic.py — data loading, cleaning, filtering, and stats.
 # No Streamlit or Plotly imports here — pure data logic only.
-# For engineering limit checking, see limits.py.
 
 import pandas as pd
-import numpy as np
 from io import StringIO
 
 from config import (
@@ -224,43 +222,3 @@ def compute_stats(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame | None:
     stats.columns = ["Min", "Max", "Mean", "Std Dev"]
     stats.index.name = "Parameter"
     return stats.round(4)
-
-
-# =============== ANOMALY DETECTION ===============
-
-def compute_zscore_anomalies(
-    df: pd.DataFrame,
-    columns: list[str],
-    threshold: float = 3.0,
-) -> tuple[pd.DataFrame | None, pd.DataFrame | None, pd.DataFrame | None]:
-    """
-    Z-score anomaly detection for numeric columns.
-
-    Returns:
-        anomaly_mask    : bool DataFrame — True where |z| > threshold
-        zscore_df       : float DataFrame of z-score values
-        summary         : per-column anomaly count, worst z-score, and status label
-    All three are None if no numeric columns are found.
-    """
-    numeric_cols = [c for c in columns if pd.api.types.is_numeric_dtype(df[c])]
-    if not numeric_cols:
-        return None, None, None
-
-    data = df[numeric_cols].copy()
-    mean = data.mean()
-    std  = data.std().replace(0, np.nan)   # avoid divide-by-zero on constant cols
-
-    zscore_df    = (data - mean).div(std).fillna(0)
-    anomaly_mask = zscore_df.abs() > threshold
-
-    summary = pd.DataFrame([
-        {
-            "Parameter":          col,
-            "Anomalies detected": int(anomaly_mask[col].sum()),
-            "Worst Z-score":      round(float(zscore_df[col].abs().max()), 3),
-            "Status":             "⚠️ Check" if anomaly_mask[col].any() else "✅ OK",
-        }
-        for col in numeric_cols
-    ]).set_index("Parameter")
-
-    return anomaly_mask, zscore_df, summary

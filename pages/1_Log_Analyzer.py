@@ -87,7 +87,7 @@ def _render_preset_section(df, controls, x_values):
         with grid[slot % ncols]:
             st.markdown(f"**{p['title']}**")
             fig = build_plot(df, p["cols"], controls["plot_type"],
-                             controls["show_grid"], None, x_values)
+                             controls["show_grid"], x_values)
             fig.update_layout(height=height, showlegend=len(p["cols"]) > 1)
             st.plotly_chart(fig, use_container_width=True)
 
@@ -106,11 +106,11 @@ def _render_custom_section(df, param_map, controls, x_values):
         if controls["multi_plot"]:
             for col in selected_columns:
                 fig = build_plot(df, [col], controls["plot_type"],
-                                 controls["show_grid"], None, x_values)
+                                 controls["show_grid"], x_values)
                 st.plotly_chart(fig, use_container_width=True)
         else:
             fig = build_plot(df, selected_columns, controls["plot_type"],
-                             controls["show_grid"], None, x_values)
+                             controls["show_grid"], x_values)
             st.plotly_chart(fig, use_container_width=True)
 
         if controls["show_stats"]:
