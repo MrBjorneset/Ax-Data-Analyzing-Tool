@@ -137,18 +137,35 @@ def render_parameter_selector(
     return selected_columns
 
 
-def render_state_selector(available_states: list[str]) -> list[str]:
+def render_state_column_picker(candidates: list[str]) -> str:
+    """
+    Choose which column defines the printer state. If only one candidate exists
+    it's used silently. Returns the chosen column name.
+    """
+    st.subheader("⚙️ States")
+    if len(candidates) == 1:
+        return candidates[0]
+    return st.selectbox(
+        "State column",
+        candidates,
+        key="state_col_pick",
+        format_func=lambda c: c.split(" - ")[-1] if " - " in c else c,
+        help="Pick which state variable to filter on. 'internal states' is usually "
+             "more detailed (e.g. shows SEQUENCING_ON) than 'system status'.",
+    )
+
+
+def render_state_selector(available_states: list[str], key_suffix: str = "") -> list[str]:
     """
     Multiselect for which printer states to include in the plots.
     All states are selected by default. An empty selection means "all".
     Returns the list of selected states.
     """
-    st.subheader("⚙️ States")
     return st.multiselect(
         "Printer states to plot",
         options=available_states,
         default=available_states,
-        key="state_filter",
+        key=f"state_filter_{key_suffix}",
         help="All states are included by default. Deselect to focus on specific "
              "phases, e.g. only READY_TO_PRINT.",
     )

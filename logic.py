@@ -126,6 +126,15 @@ def find_status_column(df: pd.DataFrame) -> str | None:
     return None
 
 
+def find_state_columns(df: pd.DataFrame) -> list[str]:
+    """
+    Return candidate state columns to filter on — the coarse 'system status'
+    and the finer 'internal states', in that order when both exist.
+    """
+    keys = ("system status", "internal state")
+    return [c for c in df.columns if any(k in c.lower() for k in keys)]
+
+
 def find_timestamp_column(df: pd.DataFrame) -> str | None:
     """Return the name of the timestamp column, or None if not found."""
     for col in df.columns:
