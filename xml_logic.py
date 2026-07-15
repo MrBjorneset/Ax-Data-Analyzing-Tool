@@ -109,7 +109,7 @@ def merge_pair(file_label, root_clean, root_rt):
         else:
             status = "only in real-time"
         rows.append({"File": file_label, "Setting": key,
-                     "Clean": vc, "Real-time": vr, "Status": status})
+                     "Factory": vc, "Real-time": vr, "Status": status})
     return rows
 
 
@@ -129,7 +129,7 @@ def build_dataframe(pairs):
     all_rows = []
     for label, root_c, root_r in pairs:
         all_rows.extend(merge_pair(label, root_c, root_r))
-    df = pd.DataFrame(all_rows, columns=["File", "Setting", "Clean", "Real-time", "Status"])
+    df = pd.DataFrame(all_rows, columns=["File", "Setting", "Factory", "Real-time", "Status"])
     if not df.empty:
         df["_o"] = df["Status"].map(STATUS_ORDER)
         df = df.sort_values(["_o", "File", "Setting"]).drop(columns="_o").reset_index(drop=True)
@@ -161,9 +161,9 @@ def build_important_table(df):
         if r is None:
             r = by_noroot.get(_norm(path, drop_root=True))
         if r is not None:
-            rows.append({"Setting": label, "Clean": r["Clean"],
+            rows.append({"Setting": label, "Factory": r["Factory"],
                          "Real-time": r["Real-time"], "Status": r["Status"]})
         else:
-            rows.append({"Setting": label, "Clean": "", "Real-time": "",
+            rows.append({"Setting": label, "Factory": "", "Real-time": "",
                          "Status": "not found"})
-    return pd.DataFrame(rows, columns=["Setting", "Clean", "Real-time", "Status"])
+    return pd.DataFrame(rows, columns=["Setting", "Factory", "Real-time", "Status"])
